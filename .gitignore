@@ -1,0 +1,25 @@
+# Ignore IntelliJ files.
+**/.idea/**/*
+**/*.iml
+**/*.ipr
+**/*.iws
+**/out/**/*
+
+# Ignore MacOSX files.
+**/.DS_Store/**/*
+**/.DS_Store
+
+# Ignore python venv
+**/venv
+
+# Node
+**/node_modules
+
+# Logs
+**/logs
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+
