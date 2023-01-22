@@ -16,11 +16,12 @@ function startVideo() {
     )
 }
 
-function getEARRatio(left, right) { //left horizontal, left vertical, right horizontal, right vertical
+function getEAR(left, right) {
     function getDistance(x1, x2, y1, y2) {
         return Math.sqrt(((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)));
     }
 
+    // left horizontal, left vertical, right horizontal, right vertical
     const lh = getDistance(left[0].x, left[3].x, left[0].y, left[3].y)
     const lv = (getDistance(left[1].x, left[5].x, left[1].y, left[5].y) + getDistance(left[2].x, left[4].x, left[1].y, left[4].y))/2
     const rh = getDistance(right[0].x, right[3].x, right[0].y, right[3].y)
@@ -28,8 +29,8 @@ function getEARRatio(left, right) { //left horizontal, left vertical, right hori
 
     return ((lv/lh)+(rv/rh))/2;
 
-    //source: R. Gawande and S. Badotra,
-    //  "Deep-Learning Approach for Efficient Eye-blink Detection with Hybrid Optimization Concept," IJACSA, Vol.13, No.6, 2022
+    // source: R. Gawande and S. Badotra,
+    // "Deep-Learning Approach for Efficient Eye-blink Detection with Hybrid Optimization Concept," IJACSA, Vol.13, No.6, 2022
 }
 
 video.addEventListener('play', () => {
@@ -38,12 +39,12 @@ video.addEventListener('play', () => {
     const displaySize = { width: video.width, height: video.height }
     faceapi.matchDimensions(canvas, displaySize)
     setInterval(async () => {
-        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks()
+        const detections = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.8 })).withFaceLandmarks()
         const left_arr = detections.landmarks.getLeftEye();
         const right_arr = detections.landmarks.getRightEye();
-        const earRatio = getEARRatio(left_arr, right_arr);
-        console.log(earRatio);
-        if (earRatio < THRESHOLD) {
+        const ear = getEAR(left_arr, right_arr);
+        console.log(ear);
+        if (ear < THRESHOLD) {
             console.log("Blink");
         }
         const resizedDetections = faceapi.resizeResults(detections, displaySize)
