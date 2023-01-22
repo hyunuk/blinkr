@@ -102,13 +102,14 @@ function increaseCount() {
 
 setInterval(getBlink, 1000);
 function getBlink() {
+    let disp = document.getElementById("display");
     let countsPerMin = 0;
     let currTime = Math.floor(Date.now() / 1000);
-    for (let i = currTime - 5; i < currTime; i++) {
+    for (let i = currTime - 60; i < currTime; i++) {
         if (countTimeStamp.has(i)) {
             countsPerMin += countTimeStamp.get(i)
         }
     }
-    // disp.innerHTML = countsPerMin;
+    disp.innerHTML = countsPerMin;
     console.log(countsPerMin);
 }
