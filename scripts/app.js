@@ -115,7 +115,9 @@ function getBlink() {
     disp.innerHTML = countsPerMin;
     console.log(countsPerMin);
 
-    if (countsPerMin < 50 && (Date.now() - start) > 60000) {
+    if (countsPerMin < 30 && (Date.now() - start) > 30000) {
         document.body.style.backgroundColor = 'red';
+    } else {
+        document.body.style.backgroundColor = 'white';
     }
 }
