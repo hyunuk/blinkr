@@ -1,7 +1,8 @@
 const THRESHOLD = 0.3
 const video = document.getElementById('video')
 let isClose = false
-let date;
+let time = new Date()
+let errorSent = false
 
 Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -42,24 +43,36 @@ video.addEventListener('play', () => {
     const displaySize = { width: video.width, height: video.height }
     faceapi.matchDimensions(canvas, displaySize)
     setInterval(async () => {
-        const detections = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0 })).withFaceLandmarks()
-        const left_arr = detections.landmarks.getLeftEye();
-        const right_arr = detections.landmarks.getRightEye();
-        const ear = getEAR(left_arr, right_arr);
-        if (ear < THRESHOLD) {
-            if (isClose) {
-                // no update
-            } else {
-                isClose = true;
-                console.log("Blink");
+        try {
+            const detections = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0 })).withFaceLandmarks()
+            const left_arr = detections.landmarks.getLeftEye();
+            const right_arr = detections.landmarks.getRightEye();
+            const ear = getEAR(left_arr, right_arr);
+            if (ear < THRESHOLD) {
+                if (isClose) {
+                    // no update
+                } else {
+                    isClose = true;
+                    console.log("Blink");
+                }
+            }
+            if (ear >= THRESHOLD) {
+                isClose = false;
+            }
+
+            const resizedDetections = faceapi.resizeResults(detections, displaySize)
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
+            faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+            time = new Date();
+            errorSent = false
+        } catch (e) {
+            const curr = new Date();
+            if (!errorSent) {
+                if (curr.valueOf() - time.valueOf() > 300000) {
+                    console.log("We cannot detect your face! Please turn off if you do not use anymore")
+                    errorSent = true;
+                }
             }
         }
-        if (ear >= THRESHOLD) {
-            isClose = false;
-        }
-
-        const resizedDetections = faceapi.resizeResults(detections, displaySize)
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
     }, 100)
 })
