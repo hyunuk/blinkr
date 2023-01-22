@@ -4,7 +4,7 @@
     "description": "blinkr is the Chrome Extension that detects eye blink and notify users to prevent their eye dry out.",
     "version": "0.1",
     "icons": {
-        "128": "images/icon-700.png"
+        "128": "images/blue_eye.png"
     },
     "options_page": "options.html",
     "action": {
