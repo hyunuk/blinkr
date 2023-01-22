@@ -6,6 +6,13 @@
     "icons": {
         "128": "images/icon-700.png"
     },
+    "options_page": "options.html",
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "permissions": [
+        "storage"
+    ],
     
     "content_scripts": [
         {
