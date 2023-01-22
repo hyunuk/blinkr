@@ -1,35 +1,48 @@
 let count = 0;
+let countsPerMin = 0;
 let countTimeStamp = new Map();
+let disp = document.getElementById("display")
 
 function increaseCount() {
+    const showNum = document.getElementById('num')
+    showNum.innerHTML = count;
     // increase count
     count++;
-    console.log(count);
+    // console.log(count);
 
     // update map
-    let date = Math.floor(Date.now() / 1000)
-    console.log(date);
+    let time = Math.floor(Date.now() / 1000)
+    // console.log(time);
+
     // empty map
     if (countTimeStamp.size === 0) {
-        countTimeStamp.set(date, 1)
-    } else if (countTimeStamp.has(date)) { // if blink more than once on same timestamp increase value
-        countTimeStamp.set(date, countTimeStamp.get(date) + 1)
+        countTimeStamp.set(time, 1)
+    } else if (countTimeStamp.has(time)) { // if blink more than once on same timestamp increase value
+        countTimeStamp.set(time, countTimeStamp.get(time) + 1)
     } else {
-        countTimeStamp.set(date, 1)
+        countTimeStamp.set(time, 1)
     }
     console.log(countTimeStamp)
 }
 
-// function updateCount() {
-//     //
-// }
+setInterval(getBlink, 1000);
+function getBlink() {
+    let currTime = Math.floor(Date.now() / 1000);
+        for (let i = currTime - 60; i < currTime; i++) {
+            if (i in countTimeStamp) {
+                countsPerMin += countTimeStamp[currTime - i]
+            }
+        }
+
+    disp.innerHTML = countsPerMin;
+    console.log(countsPerMin);
+}
+
+// EXAMPLE
+// setInterval(myTimer, 1000);
 //
-// setInterval(updateCount(), 1000)
-// // time = {2: 1, 3: 2, 5: 1, 7: 1}
-// //
-// // curr_time = 60
-// // cnt = 5
-// //
-// // for i in range(1, 61): # i == 60
-// // if curr_time - i in time:
-// // cnt += time[curr_time - i]
+// function myTimer() {
+//     const date = new Date();
+//     // document.getElementById("demo").innerHTML = date.toLocaleTimeString();
+//     console.log(date.getMilliseconds())
+// }
