@@ -21,10 +21,19 @@
         <span class="slot__label">ON</span>
     </label>
     <div class="curtain"></div> -->
-    
-    <p># of time you blinked in a minute: </p>
 
-    <script src="./popup.js" type="module"></script>	<script src="js/main.js"></script>
+    <!-- DOESN'T WORK WITH CHROME EXTENSIONS-->
+    <!--    <button id='but' onclick="increaseCount()">Blink</button>-->
+    <button id='butt'>Blink</button>
+    <p>
+      total # of blinks: <span id="num"></span>
+    </p>
+
+    <p>
+      # of time you blinked in a minute: <span id="display"></span>
+    </p>
+
+    <script src="./popup.js" type="module"></script>
 
   </body>
 </html>
