@@ -1,5 +1,7 @@
 const THRESHOLD = 0.3
 const video = document.getElementById('video')
+let isClose = false
+let date;
 
 Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
@@ -45,7 +47,15 @@ video.addEventListener('play', () => {
         const right_arr = detections.landmarks.getRightEye();
         const ear = getEAR(left_arr, right_arr);
         if (ear < THRESHOLD) {
-            console.log("Blink");
+            if (isClose) {
+                // no update
+            } else {
+                isClose = true;
+                console.log("Blink");
+            }
+        }
+        if (ear >= THRESHOLD) {
+            isClose = false;
         }
 
         const resizedDetections = faceapi.resizeResults(detections, displaySize)
