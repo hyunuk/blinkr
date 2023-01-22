@@ -1,0 +1,21 @@
+label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  /* Global CSS */
+  body {
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    height: 88vh;
+    width: 75vh;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
