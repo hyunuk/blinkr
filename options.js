@@ -5,7 +5,8 @@ Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
     faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
     faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
-    faceapi.nets.faceExpressionNet.loadFromUri('/models')
+    faceapi.nets.faceExpressionNet.loadFromUri('/models'),
+    faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
 ]).then(startVideo)
 
 function startVideo() {
@@ -39,11 +40,10 @@ video.addEventListener('play', () => {
     const displaySize = { width: video.width, height: video.height }
     faceapi.matchDimensions(canvas, displaySize)
     setInterval(async () => {
-        const detections = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.8 })).withFaceLandmarks()
+        const detections = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0 })).withFaceLandmarks()
         const left_arr = detections.landmarks.getLeftEye();
         const right_arr = detections.landmarks.getRightEye();
         const ear = getEAR(left_arr, right_arr);
-        console.log(ear);
         if (ear < THRESHOLD) {
             console.log("Blink");
         }
