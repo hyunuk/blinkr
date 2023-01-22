@@ -3,6 +3,7 @@ const video = document.getElementById('video')
 let isClose = false
 let time = new Date()
 let errorSent = false
+let start
 
 let count = 0;
 let countTimeStamp = new Map();
@@ -18,6 +19,7 @@ function startVideo() {
         stream => video.srcObject = stream,
         err => console.error(err)
     )
+    start = new Date()
 }
 
 function getEAR(left, right) {
@@ -112,4 +114,10 @@ function getBlink() {
     }
     disp.innerHTML = countsPerMin;
     console.log(countsPerMin);
+
+    if (countsPerMin < 30 && (Date.now() - start) > 30000) {
+        document.body.style.backgroundColor = 'red';
+    } else {
+        document.body.style.backgroundColor = 'white';
+    }
 }
