@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>blinkr</title>
+    <h1 style="position: absolute; top: 0; left: 0; margin-left:20px; font-size: 32px; z-index: 1;">blinkr</h1>
     <script defer src="face-api.js"></script>
     <script defer src="app.js"></script>
     <style>
@@ -25,5 +26,8 @@
 </head>
 <body>
 <video id="video" width="720" height="560" autoplay muted></video>
+<h2 style="position: fixed; bottom: 0; left: 0; margin-left:20px;">
+    Your current blink count:  <span id="display">0</span> times per minute
+</h2>
 </body>
 </html>
