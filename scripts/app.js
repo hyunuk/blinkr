@@ -1,25 +1,73 @@
 const THRESHOLD = 0.3
-const video = document.getElementById('video')
+const video = document.createElement('video');
+
 let isClose = false
 let time = new Date()
 let errorSent = false
 let start
-
 let count = 0;
 let countTimeStamp = new Map();
 
+// Load pre-defined models
 Promise.all([
     faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
     faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
 ]).then(startVideo)
 
 function startVideo() {
+    video.addEventListener('canplay', () => video.play());
     navigator.getUserMedia(
-        { video: {} },
+        { video: true },
         stream => video.srcObject = stream,
         err => console.error(err)
     )
     start = new Date()
+    video.addEventListener('play', () => {
+        // const canvas = faceapi.createCanvasFromMedia(video)
+        const canvas = document.createElement('canvas');
+        document.body.appendChild(canvas)
+        const displaySize = { width: video.width, height: video.height }
+        faceapi.matchDimensions(canvas, displaySize)
+        const ctx = canvas.getContext('2d');
+        setInterval(async () => {
+            try {
+                ctx.drawImage(video, 0, 0);
+                const detections = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0 })).withFaceLandmarks()
+                const left_arr = detections.landmarks.getLeftEye();
+                const right_arr = detections.landmarks.getRightEye();
+                const ear = getEAR(left_arr, right_arr);
+                if (ear < THRESHOLD) {
+                    if (isClose) {
+                        // no update
+                    } else {
+                        isClose = true;
+                        // console.log("Blink");
+                        increaseCount();
+                    }
+                }
+                if (ear >= THRESHOLD) {
+                    isClose = false;
+                }
+
+                const resizedDetections = faceapi.resizeResults(detections, displaySize)
+                canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
+                if (detections) {
+                    faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+                }
+                time = new Date();
+                errorSent = false
+            } catch (e) {
+                const curr = new Date();
+                if (!errorSent) {
+                    if (curr.valueOf() - time.valueOf() > 300000) {
+                        console.log("We cannot detect your face! Please turn off if you do not use anymore")
+                        errorSent = true;
+                    }
+                }
+            }
+        }, 50)
+    })
+
 }
 
 function getEAR(left, right) {
@@ -38,47 +86,6 @@ function getEAR(left, right) {
     // source: R. Gawande and S. Badotra,
     // "Deep-Learning Approach for Efficient Eye-blink Detection with Hybrid Optimization Concept," IJACSA, Vol.13, No.6, 2022
 }
-
-video.addEventListener('play', () => {
-    const canvas = faceapi.createCanvasFromMedia(video)
-    document.body.append(canvas)
-    const displaySize = { width: video.width, height: video.height }
-    faceapi.matchDimensions(canvas, displaySize)
-    setInterval(async () => {
-        try {
-            const detections = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0 })).withFaceLandmarks()
-            const left_arr = detections.landmarks.getLeftEye();
-            const right_arr = detections.landmarks.getRightEye();
-            const ear = getEAR(left_arr, right_arr);
-            if (ear < THRESHOLD) {
-                if (isClose) {
-                    // no update
-                } else {
-                    isClose = true;
-                    // console.log("Blink");
-                    increaseCount();
-                }
-            }
-            if (ear >= THRESHOLD) {
-                isClose = false;
-            }
-
-            const resizedDetections = faceapi.resizeResults(detections, displaySize)
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-            faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
-            time = new Date();
-            errorSent = false
-        } catch (e) {
-            const curr = new Date();
-            if (!errorSent) {
-                if (curr.valueOf() - time.valueOf() > 300000) {
-                    console.log("We cannot detect your face! Please turn off if you do not use anymore")
-                    errorSent = true;
-                }
-            }
-        }
-    }, 100)
-})
 
 function increaseCount() {
     // const showNum = document.getElementById('num')
