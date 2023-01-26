@@ -4,26 +4,26 @@ const video = document.createElement('video');
 let isClose = false
 let time = new Date()
 let errorSent = false
-let start
 let count = 0;
 let countTimeStamp = new Map();
 
-// Load pre-defined models
+// Load pre-defined models and start video when loading is completed.
 Promise.all([
     faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
     faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
 ]).then(startVideo)
 
 function startVideo() {
+    // Play video when it's ready
     video.addEventListener('canplay', () => video.play());
+
     navigator.getUserMedia(
         { video: true },
         stream => video.srcObject = stream,
         err => console.error(err)
     )
-    start = new Date()
+
     video.addEventListener('play', () => {
-        // const canvas = faceapi.createCanvasFromMedia(video)
         const canvas = document.createElement('canvas');
         document.body.appendChild(canvas)
         const displaySize = { width: video.width, height: video.height }
@@ -35,24 +35,13 @@ function startVideo() {
                 const detections = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0 })).withFaceLandmarks()
                 const left_arr = detections.landmarks.getLeftEye();
                 const right_arr = detections.landmarks.getRightEye();
-                const ear = getEAR(left_arr, right_arr);
-                if (ear < THRESHOLD) {
-                    if (isClose) {
-                        // no update
-                    } else {
-                        isClose = true;
-                        // console.log("Blink");
-                        increaseCount();
-                    }
+                const ratio = getEAR(left_arr, right_arr);
+                if (ratio < THRESHOLD && !isClose) {
+                    isClose = true;
+                    increaseCount();
                 }
-                if (ear >= THRESHOLD) {
+                if (ratio >= THRESHOLD) {
                     isClose = false;
-                }
-
-                const resizedDetections = faceapi.resizeResults(detections, displaySize)
-                canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-                if (detections) {
-                    faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
                 }
                 time = new Date();
                 errorSent = false
@@ -70,26 +59,29 @@ function startVideo() {
 
 }
 
+/*
+    Source: R. Gawande and S. Badotra,
+    "Deep-Learning Approach for Efficient Eye-blink Detection with Hybrid Optimization Concept,"
+    IJACSA, Vol.13, No.6, 2022
+ */
 function getEAR(left, right) {
     function getDistance(x1, x2, y1, y2) {
-        return Math.sqrt(((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)));
+        return Math.sqrt(((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
     }
 
-    // left horizontal, left vertical, right horizontal, right vertical
+    // left horizontal
     const lh = getDistance(left[0].x, left[3].x, left[0].y, left[3].y)
+    // left vertical
     const lv = (getDistance(left[1].x, left[5].x, left[1].y, left[5].y) + getDistance(left[2].x, left[4].x, left[1].y, left[4].y))/2
+    // right horizontal
     const rh = getDistance(right[0].x, right[3].x, right[0].y, right[3].y)
+    // right vertical
     const rv = (getDistance(right[1].x, right[5].x, right[1].y, right[5].y) + getDistance(right[2].x, right[4].x, right[1].y, right[4].y))/2
 
-    return ((lv/lh)+(rv/rh))/2;
-
-    // source: R. Gawande and S. Badotra,
-    // "Deep-Learning Approach for Efficient Eye-blink Detection with Hybrid Optimization Concept," IJACSA, Vol.13, No.6, 2022
+    return ((lv / lh) + (rv / rh)) / 2;
 }
 
 function increaseCount() {
-    // const showNum = document.getElementById('num')
-    // showNum.innerHTML = count;
     // increase button click count NOT BLINKS PER MINUTE
     count++;
     console.log(count)
@@ -109,8 +101,8 @@ function increaseCount() {
     console.log(countTimeStamp)
 }
 
-setInterval(getBlink, 1000);
-function getBlink() {
+setInterval(getBlinkCount, 1000);
+function getBlinkCount() {
     let disp = document.getElementById("display");
     let countsPerMin = 0;
     let currTime = Math.floor(Date.now() / 1000);
@@ -122,9 +114,22 @@ function getBlink() {
     disp.innerHTML = countsPerMin;
     console.log(countsPerMin);
 
-    if (countsPerMin <= 6 && (Date.now() - start) > 30000) {
-        document.body.style.backgroundColor = 'red';
-    } else {
+    if (countsPerMin < 5) {
+        chrome.action.setIcon({path: {
+                "19": "../images/19_red_eye.png",
+                "36": "../images/36_red_eye.png",
+            }});
+        document.body.style.backgroundColor = 'green';
+    } else if (countsPerMin < 12) {
+        chrome.action.setIcon({path: {
+                "19": "../images/19_yellow_eye.png",
+                "36": "../images/36_yellow_eye.png",
+            }});
         document.body.style.backgroundColor = 'white';
+    } else {
+        chrome.action.setIcon({path: {
+                "19": "../images/19_blue_eye.png",
+                "36": "../images/36_blue_eye.png",
+            }});
     }
 }
