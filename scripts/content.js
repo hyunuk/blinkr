@@ -1,11 +1,6 @@
-const THRESHOLD = 0.3
-const video = document.createElement('video');
-
-let isClose = false
-let time = new Date()
-let errorSent = false
-let count = 0;
 let countTimeStamp = new Map();
+
+const video = document.createElement('video');
 
 // Load pre-defined models and start video when loading is completed.
 Promise.all([
@@ -14,6 +9,11 @@ Promise.all([
 ]).then(startVideo)
 
 function startVideo() {
+    let isClose = false
+    let time = new Date()
+
+    const threshold = 0.3
+
     // Play video when it's ready
     video.addEventListener('canplay', () => video.play());
 
@@ -22,6 +22,7 @@ function startVideo() {
         stream => video.srcObject = stream,
         err => console.error(err)
     )
+
 
     video.addEventListener('play', () => {
         const canvas = document.createElement('canvas');
@@ -36,22 +37,18 @@ function startVideo() {
                 const left_arr = detections.landmarks.getLeftEye();
                 const right_arr = detections.landmarks.getRightEye();
                 const ratio = getEAR(left_arr, right_arr);
-                if (ratio < THRESHOLD && !isClose) {
+                if (ratio < threshold && !isClose) {
                     isClose = true;
                     increaseCount();
                 }
-                if (ratio >= THRESHOLD) {
+                if (ratio >= threshold) {
                     isClose = false;
                 }
                 time = new Date();
-                errorSent = false
             } catch (e) {
                 const curr = new Date();
-                if (!errorSent) {
-                    if (curr.valueOf() - time.valueOf() > 300000) {
-                        console.log("We cannot detect your face! Please turn off if you do not use anymore")
-                        errorSent = true;
-                    }
+                if (curr.valueOf() - time.valueOf() > 300000) {
+                    console.log("We cannot detect your face! Please turn off if you do not use anymore")
                 }
             }
         }, 50)
@@ -82,15 +79,8 @@ function getEAR(left, right) {
 }
 
 function increaseCount() {
-    // increase button click count NOT BLINKS PER MINUTE
-    count++;
-    console.log(count)
-
-    // update map
     let time = Math.floor(Date.now() / 1000)
-    // console.log(time);
 
-    // empty map
     if (countTimeStamp.size === 0) {
         countTimeStamp.set(time, 1)
     } else if (countTimeStamp.has(time)) { // if blink more than once on same timestamp increase value
@@ -98,12 +88,10 @@ function increaseCount() {
     } else {
         countTimeStamp.set(time, 1)
     }
-    console.log(countTimeStamp)
 }
 
-setInterval(getBlinkCount, 1000);
+setInterval(getBlinkCount, 100);
 function getBlinkCount() {
-    let disp = document.getElementById("display");
     let countsPerMin = 0;
     let currTime = Math.floor(Date.now() / 1000);
     for (let i = currTime - 60; i < currTime; i++) {
@@ -111,25 +99,8 @@ function getBlinkCount() {
             countsPerMin += countTimeStamp.get(i)
         }
     }
-    disp.innerHTML = countsPerMin;
-    console.log(countsPerMin);
-
-    if (countsPerMin < 5) {
-        chrome.action.setIcon({path: {
-                "19": "../images/19_red_eye.png",
-                "36": "../images/36_red_eye.png",
-            }});
-        document.body.style.backgroundColor = 'green';
-    } else if (countsPerMin < 12) {
-        chrome.action.setIcon({path: {
-                "19": "../images/19_yellow_eye.png",
-                "36": "../images/36_yellow_eye.png",
-            }});
-        document.body.style.backgroundColor = 'white';
-    } else {
-        chrome.action.setIcon({path: {
-                "19": "../images/19_blue_eye.png",
-                "36": "../images/36_blue_eye.png",
-            }});
-    }
+    chrome.runtime.sendMessage({
+        type: "blinkr_time",
+        time: countsPerMin
+    })
 }

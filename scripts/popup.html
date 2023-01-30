@@ -10,7 +10,17 @@
     <div class="logo">
         <h1>blinkr</h1>
     </div>
-    <button id='button'>blink!</button>
-    <script src="popup.js" type="module"></script>
+    <fieldset>
+      <label>
+        <input role="switch" type="checkbox" />
+        <span id="power">Off</span>
+      </label>
+    </fieldset>
+
+    <p>
+      <span id="display"></span>
+    </p>
+
+    <script src="popup.js"></script>
   </body>
 </html>
