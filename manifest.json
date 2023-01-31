@@ -14,15 +14,9 @@
     "permissions": [
         "storage",
         "offscreen",
-        "notifications",
+        "notifications"
     ],
     "background": {
         "service_worker": "background.js"
-    },
-    "content_scripts": [
-        {
-            "js": ["/scripts/content.js"],
-            "matches": ["<all_urls>"]
-        }
-    ]
+    }
 }
