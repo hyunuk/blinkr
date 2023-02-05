@@ -104,3 +104,17 @@ function getBlinkCount() {
         time: countsPerMin
     })
 }
+
+setInterval(setBlinkCount, 100);
+function setBlinkCount() {
+    let display = document.getElementById("display");
+    chrome.storage.session.get(["blinkr_count"]).then((res) => {
+        const count = res.blinkr_count;
+        let msg = `blinkr count: ${count} times/min`
+        if (count === undefined) {
+            msg = "blinkr is not working. Please turn on.";
+        }
+        display.innerHTML = msg;
+    })
+}
+

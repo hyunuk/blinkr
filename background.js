@@ -1,4 +1,6 @@
-const imagePath = {
+const TAB_URL = chrome.runtime.getURL("./scripts/tab.html")
+let TAB_ID;
+const IMAGE_PATH = {
     "red": {
         "19": "../images/19_red_eye.png",
         "36": "../images/36_red_eye.png",
@@ -12,19 +14,7 @@ const imagePath = {
         "36": "../images/36_green_eye.png",
     }
 }
-async function createOffscreen() {
-    if (await chrome.offscreen.hasDocument()) return;
-    await chrome.offscreen.createDocument({
-        url: "/scripts/offscreen.html",
-        reasons: ["DISPLAY_MEDIA"],
-        justification: "Face recognition, doesn't record."
-    });
-}
-
-async function closeScreen() {
-    if (!await chrome.offscreen.hasDocument()) return;
-    await chrome.offscreen.closeDocument();
-}
+let checkbox;
 
 function createNotification() {
     chrome.storage.session.get(["blinkr_start"]).then((res) => {
@@ -48,31 +38,51 @@ function createNotification() {
     })
 }
 
-function clearStorage() {
-    chrome.storage.session.clear()
+function createTab() {
+    const update = () => chrome.tabs.update(TAB_ID, {active: true});
+    const create = () => chrome.tabs.create({ url:TAB_URL }, (tab) => {
+        TAB_ID = tab.id;
+    });
+    TAB_ID ? update() : create();
+}
+
+function closeTab() {
+    if (TAB_ID) {
+        chrome.tabs.remove(TAB_ID, () =>{});
+        TAB_ID = null;
+    }
 }
 
 chrome.runtime.onMessage.addListener(async (msg) => {
     switch (msg.type) {
         case "blinkr_on":
-            await createOffscreen();
-            chrome.storage.session.set({"blinkr_start": msg.time})
+            createTab();
+            chrome.storage.session.set({"blinkr_start": msg.time});
             break;
         case "blinkr_off":
-            await closeScreen();
-            clearStorage();
+            closeTab();
+            chrome.storage.session.clear();
             break;
         case "blinkr_time":
             const count = msg.time;
             if (count < 5) {
-                chrome.action.setIcon({path: imagePath.red});
+                chrome.action.setIcon({path: IMAGE_PATH.red});
                 createNotification();
             } else if (count < 12) {
-                chrome.action.setIcon({path: imagePath.yellow});
+                chrome.action.setIcon({path: IMAGE_PATH.yellow});
             } else {
-                chrome.action.setIcon({path: imagePath.green});
+                chrome.action.setIcon({path: IMAGE_PATH.green});
             }
             chrome.storage.session.set({"blinkr_count": count})
             break;
+        case "temp":
+            console.log(msg.msg)
     }
 });
+
+chrome.tabs.onRemoved.addListener((closedTabId) => {
+    if (TAB_ID === closedTabId) {
+        chrome.storage.session.set({"blinkr_tabClosed": true})
+        TAB_ID = null;
+    }
+})
